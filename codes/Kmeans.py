@@ -1,9 +1,8 @@
-###################################### Código K-means (machine learning) ########################################
-################################# Adaptado para dados reais do campo de Namorado ################################
+####################################### Code K-means (machine learning) #########################################
 ########################################### Ibsen P. S. Gomes ###################################################
 ############################ Observatório Nacional - Universidade Federal Fluminense ############################
 
-# Bibliotecas
+# Libraries:
 import numpy as np 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -12,9 +11,22 @@ import random
 from math import sqrt
 
 
-### Normalização dos dados (pré processamento):
+# Normalization:
 
 def norm_data(data):
+    
+    '''
+    Data normalization using the "minmax" method
+    
+    input: 
+    data = column in a database 
+    
+    operation:
+    new_data = [data - min(data)]/[max(data) - min(data)]
+    
+    output:
+    data_norm = normalized data
+    '''
     
     data_norm = np.zeros((len(data)))
     for i in range(len(data)):
@@ -23,108 +35,109 @@ def norm_data(data):
     return data_norm
 
 
-### Métricas:
+# Metrics:
 
-# Distância Euclidiana:
 def euclidian(v1, v2, check_input=True):
     
     '''
-    Esse código revebe dois vetores e calcula a distancia euclidiana entre vetores
+    Given two vectors and calculate the Euclidean distance between vectors
     
-    entrada
-    v1 = lista 1D
-    v2 = lista 1D
+    input:
+    v1 = 1D vector
+    v2 = 1D vector
     
-    saída
-    distancia euclidiana
+    operation:
+    distance = sqrt(sum(v1 - v2)**2)
+    
+    output:
+    euclidian_distance
     '''
     
-    # Assert para assegurar que as entradas são 1D:
+    # "Assert" to ensure the entries are 1D:
     v1 = np.asarray(v1)
     v2 = np.asarray(v2)
     if check_input is True:
         assert v1.ndim == 1, 'a must be a 1D' 
         assert v2.ndim == 1, 'x must be a 1D'
-    
-    #Armazena o quadrado da distância
+        
     dist = 0.0
     for i in range(len(v1)):
         dist += (v1[i] - v2[i])**2
  
-    #Tira a raiz quadrada da soma
-    eucli = sqrt(dist)
-    return eucli
+    euclidian_distance = sqrt(dist)
+    
+    return euclidian_distance
 
 
-# Distância Manhattan:
 def manhattan(v1, v2, check_input=True):
     
     '''
-    Esse código revebe dois vetores e calcula a distancia Manhattan entre vetores
+    Given two vectors and calculate the Manhattan distance between vectors
     
-    entrada
-    v1 = lista 1D
-    v2 = lista 1D
+    input:
+    v1 = 1D vector
+    v2 = 1D vector
     
-    saída
-    distancia manhattan
+    operation:
+    distance = |sum(v1 - v2)|
+    
+    output:
+    euclidian_distance
     '''
     
-    # Assert para assegurar que as entradas são 1D:
+    # "Assert" to ensure the entries are 1D:
     v1 = np.asarray(v1)
     v2 = np.asarray(v2)
     if check_input is True:
         assert v1.ndim == 1, 'a must be a 1D' 
         assert v2.ndim == 1, 'x must be a 1D'
     
-    #Armazena a distância simples
     dist = 0.0
     for i in range(len(v1)):
-        dist += (v1[i] - v2[i])
+        dist += abs(v1[i] - v2[i])
  
-    #atribui dist para a variável de saida manhattan
-    manhattan = dist
-    return manhattan
+    manhattan_distance = dist
+    return manhattan_distance
 
 
-### Inicialização kmeans++:
+### Kmeans++ inicialization:
 
 def kmeans_plus_plus(data, k):
     
     '''
-    Inicialização usando o kmeans++:
-    inputs:
-    data = numpy array onde será sorteado um ponto inicial e a partir dele selecionar outros centroides
-    k = numero de clusters
+    Initialization using kmeans++:
+     inputs:
+     data = numpy array where an initial point will be drawn and, from it, select other centroids
+     k = number of clusters
     
-    output:
-    coordenadas dos centroides após o uso do kmeans++
+     output:
+     centroid coordinates, after using kmeans++
     
-    Obs: o código não seleciona o próximo centroide através de uma distribuição de probabilidade
-    ele apenas seleciona o proximo centroide como sendo o mais distante dos centroides ja selecionados!
+     Note: the code does not select the next centroid through a probability distribution,
+     it just selects the next centroid as being the farthest from the already selected centroids!
     '''
     
-    ## inicializa uma lista de centróides e adiciona um ponto de dados selecionado aleatoriamente para a lista:
+    ## initialize a list of centroids and add a randomly selected data point to the list:
     centroids = []
     centroids.append(data[np.random.randint(
             data.shape[0]), :])
   
-    ## iterações para gerar os outros centroides (k - 1):
+    ## iterations to generate the other centroids (k - 1):
     for c_id in range(k - 1):
          
-        ## inicializa uma lista para armazenar distâncias entre os dados até o centróide mais próximo:
+        ## initialize a list to store distances from data to the nearest centroid:
         dist = []
         for i in range(data.shape[0]):
             point = data[i, :]
             d = sys.maxsize
              
-            ## calcula a distância de um dado até os centróide, selecionado e armazene a distância mínima:
+            ## calculate the distance from a given to the selected centroids and store the minimum distance:
             for j in range(len(centroids)):
                 temp_dist = euclidian(point, centroids[j])
                 d = min(d, temp_dist)
             dist.append(d)
              
-        ## seleciona um dado com distância máxima como nosso próximo centróide
+        ## select a die with maximum distance as our next centroid
         dist = np.array(dist)
         next_centroid = data[np.argmax(dist), :]
         centroids.append(next_centroid)
@@ -138,74 +151,72 @@ def kmeans_plus_plus(data, k):
 def K_means(data, k, it, tol, random='range'):
     
     '''
-    Esse código aplica o método k-means a um conjunto de dados de entrada
+    This code applies the k-means method to an input dataset
     
-    entrada:
+     Prohibited:
     
-    data = dados a serem agrupados;
-    k = n° de centroides (quantos grupos se quer dividir os dados)
-    tol = tolerância 
-    random = forma de inicialização dos centroides
+     data = data to be grouped;
+     k = number of centroids (how many groups you want to divide the data)
+     tol = tolerance
+     random = way to initialize the centroids
     
-    método:
+     method:
     
-    -> calculo da distância entre cada dado com os centroides
-    -> atualização da posição do centroide para a média do grupo
-    -> se posição atual - posição anterios dos centroides for menor que tolerância (tol) o código para
-    -> se o critério de tolerância não for atendida, o código continua a realizar as iterações (talvez faça todas as iterações!)
+     -> calculation of the distance between each data with the centroids
+     -> update of centroid position to group mean
+     -> if position [i] - position [i-1] of the centroids is less than tolerance (tol) the code stops!
+     -> if the tolerance criterion is not met, the code continues to perform iterations (maybe do all iterations!)
     
-    saída:
+     exit:
 
-    centroids = coordenadas dos centroides após o fim das iterações 
-    conta = quantas iterações foram realizadas
-    index = etiqueta de cada amostra apoós a convergência
-    inércia = soma do quadrado da distância intra-cluster
+     centroids = coordinates of the centroids after the end of iterations
+     count = how many iterations were performed
+     index = label of each sample after convergence
+     inertia = sum of squared intra-cluster distance
     '''
      
     nprop = data.shape[1]
-    centroids = np.zeros((k, nprop)) # Array vazio que será preencido pelos Centroids (automatizar isso)
+    centroids = np.zeros((k, nprop))
     
-    # Condicional -> se "range", os centroides serão encolhidos de forma aleatória dentro de um range:
+    # Conditional -> if "range", the centroids will be drawn within a range:  
     if random == 'range':
         
         for npro in range(nprop):
             for i in range(k):
                 centroids[i,npro]  = np.array(np.random.uniform(min(data[:,npro]),max(data[:,npro])))
             
-    # Condicional -> se "input_data", os centroides serão escolhidos entre os dados de entrada:     
+    # Conditional -> if "input_data", the centroids will be chosen from the input data:     
     if random == 'input_data':
         
         for i in range(k):
             index = np.random.randint(data.shape[0])
             centroids[i] = data[index,:]
             
-    # Condicional -> para inicialização k-means++:
+    # Conditional -> for k-means++ initialization:
     if random == 'kmeans++':
         
         centroids = kmeans_plus_plus(data, k) # chamando a função kmeans++
         
         
     conta = 0
-    ###lastmatches = None
-    index = [0.0]*np.size(data,0) # para armazenar as etiquetas de cada amostra
+
+    index = [0.0]*np.size(data,0) # to store the labels of each sample
     
-    #O número de iterações será no máximo 100
     for t in range(it):
         bestmatches = [[] for i in range(k)]
      
-        #Verifica qual centroide esta mais perto de cada instancia
+        #Check which centroid is closer to each instance
         for j in range(len(data)):
             row=data[j]
-            bestmatche = 0 #Aqui armazeno o índice da menor distância para comparação
+            bestmatche = 0 ## Here, store the index of the shortest distance for comparison
             for i in range(k):
-                d = euclidian(centroids[i],row) #Calcula a distancia em relação ao centroide
-                if d < euclidian(centroids[bestmatche],row): ###Armazenando a menor distância entre a amaostra e o centroide!
-                    bestmatche = i
-            index[j] = bestmatche # add um indice que representa o centroide mais próximo
+                d = euclidian(centroids[i],row) 
+                if d < euclidian(centroids[bestmatche],row): #Storing the smallest distance between the sample and the centroid
+                    bestmatche = i 
+            index[j] = bestmatche # add an index that represents the nearest centroid
             bestmatches[bestmatche].append(j)
      
-        #Move o centroide para a zona média do cluster
-        #no caso teremos 
+        #Update the centroids to the new cluster mean
         for i in range(k):
             avgs=[0.0]*len(data[0])
             if len(bestmatches[i])>0:
@@ -216,20 +227,18 @@ def K_means(data, k, it, tol, random='range'):
                     avgs[j] /= len(bestmatches[i])
                 centroids[i]=avgs
                 
-        # Condicional para convergência: se a posição atual dos centroides - posição anterior...
-        # ...for menor que uma tolerância o código para e converge!
+        # Conditional for convergence: if position [i] - previous position[i-1]...
+         # ...if less than a tolerance the code stops and converges!
         if np.allclose(centroids[i],centroids[i-1], rtol=tol) == True:
             break 
             
-        ###lastmatches=bestmatche
-        conta += 1 # conta quantas iterações ocorreram
+        conta += 1
     
-    
-    # Cálculo da inércia:
+    # Calculate Inertia:
     inercia = 0
     for centro_index in range (k):
         for amostra in range (len(index)):
-            # Se a etiqueta tiver o mesmo índice que o centroide, a operação para Ínercia será realizada:
+            # If the sample index has the same index as the centroid, the operation for Inertia will be performed:
             if index[amostra] == centro_index: 
                 inercia += sum(abs((data[amostra] - centroids[centro_index])**2))
                 
@@ -237,3 +246,5 @@ def K_means(data, k, it, tol, random='range'):
     
     return centroids, conta, index, inercia
 
+
+#################################################### END CODE ###################################################
